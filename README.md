@@ -60,5 +60,5 @@ More sanitizing, there's a little nasty code in there.
 
 Since this has code that matches filenames to relations, I could do a 'forced indices warming' or such.
 
-It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it assumes you have filesystem permissions, which is a point of failure you don't have if using pg_class info.
+It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it assumes you have filesystem permissions, which is a point of failure you don't have using pg_class.
 
