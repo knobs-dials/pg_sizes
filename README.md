@@ -36,6 +36,22 @@ Only when you ask, because this reads most data so will likely mess with your ca
     Total size of databases: 6.4MB
 
 # Options
+    Usage: pg_sizes [options]
+    
+    Options:
+      -h, --help            show this help message and exit
+      -s SUBSTR, --dbname-substring=SUBSTR
+                            Only report databases with given substring
+      -a, --apparent-size   By default we report disk use. This reports apparent
+                            size instead.
+      -p, --precise-rowcount
+                            By default we get the row count estimate via VACUUM
+                            statistics, which can make the column sizes a little
+                            imprecise. This forces a count(*), which is slower but
+                            precise.
+      -c, --column-sizes    Estimate size use per column. NOTE: this basically
+                            reads all data, so is slow and will mess with your
+                            caches
 
 
 # Caveats
@@ -43,4 +59,6 @@ Only when you ask, because this reads most data so will likely mess with your ca
 Proof of concept version, contains various hardcoded assumptions, and I may have misread documentation.  I'm sure the sizes are approximate  I need to read up.
 
 You need to be able to stat the database's actual files on filesystem. (TODO: figure out if we can do it from the database itself - see exact meaning of relpages)
+
+You're running someone else's code on your database.
 
