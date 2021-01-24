@@ -41,11 +41,12 @@
 
 # Caveats
 
-Proof of concept version, contains various hardcoded assumptions, and I may have probably misread documentation.  I'm sure the sizes are approximate.  I need to read up.
+Proof of concept version, contains various hardcoded assumptions, and assume I have misread documentation and that various sizes are inaccurate.  I need to read up.
 
 You're running someone else's code on your database.
 
-# Consider
 
-Since this has code that matches filenames to relations, I could do a 'forced indices warming' or similar.
+# TODO
+
+Since this has code that matches filenames to relations, I could do a 'forced indices warming' or such.
 
