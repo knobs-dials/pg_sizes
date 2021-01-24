@@ -25,6 +25,7 @@
 The database summary comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
 
 The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.4/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
+(and some assumptions about how those relate to TOAST and indices, which is probably at least part of why they seem a little different)
 
 
 # Options
@@ -48,7 +49,7 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
 
 Proof of concept version, contains various hardcoded assumptions, and assume I have misread documentation and that various sizes are inaccurate.  I need to read up.
 
-Needs access to each database; currently assumes we're the admin. Related to:
+Needs access to each database, so basically just assumes we're the admin. Related to:
 
 You're running someone else's code on your database.
 
