@@ -1,10 +1,10 @@
 # Example
 
      # pg_sizes
-          'dataplot'  total size:   16MB, of which    regulartable: 12.7MB    toast  459KB    indexes  2.5MB    other/unknown:  8.2KB
-             'music'  total size:  5.1GB, of which    regulartable:  3.1GB    toast  1.1GB    indexes    1GB    other/unknown:   33KB
-            'quotes'  total size:  6.4MB, of which    regulartable:  2.8MB    toast  492KB    indexes  3.1MB    other/unknown:     0B
-             'solar'  total size:  537MB, of which    regulartable:  348MB    toast  459KB    indexes  189MB    other/unknown:     0B
+          'dataplot'  total size:   16MB, of which    regulartable: 12.7MB    toast  459KB    indexes  2.5MB    other:  8.2KB
+             'music'  total size:  5.1GB, of which    regulartable:  3.1GB    toast  1.1GB    indexes    1GB    other:   33KB
+            'quotes'  total size:  6.4MB, of which    regulartable:  2.8MB    toast  492KB    indexes  3.1MB    other:     0B
+             'solar'  total size:  537MB, of which    regulartable:  348MB    toast  459KB    indexes  189MB    other:     0B
      Total size of databases: 5.7GB
 
 
