@@ -1,0 +1,322 @@
+#!/usr/bin/python3
+
+import glob
+import sys
+import os
+import time
+import re
+import optparse
+
+import psycopg2
+
+
+def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradigits=0, i_for_1024=True):
+    """ For more easily skimmable sizes
+
+        e.g.
+             kmg(3429873278462) == '3.4T'
+             kmg(342987327)     == '343M'
+             kmg(34298)         == '34K'
+
+             '%sB'%kmg(2342342324)                           == '2.3GB'
+             '%sB'%kmg(2342342324, kilo=1024)                == '2.2GiB'
+             '%sB'%kmg(2342342324, kilo=1024, extradigits=1) == '2.18GiB'
+             '%sB'%kmg(19342342324, kilo=1024)                == '18GiB'
+             '%sB'%kmg(19342342324, kilo=1024, extradigits=1) == '18GiB'  (because of rstrip0)
+
+        Decimal/SI kilos by default, so useful beyond bytes.
+        Specify kilo=1024 if you want binary kilos. By default this also adds the i.
+
+        thresh is the controls where we take one digit away, e.g. for 1.3GB but 16GB.
+        Default is at 15 which is entirely arbitrary. 
+        Disable using None.
+
+        nextup makes us switch to the next higher up earlier, e.g. 700GB but 0.96TB
+        Disable using None.
+ 
+        extradigits=1 (or maybe more) to unconditionally see a less-rounded number
+        (though note rstrip can still apply)
+
+        rstrip0     whether to take off '.0' if present (defaults to true)
+        append      is mostly meant for optional space between number and unit.
+    """
+    ret = None
+
+    mega = kilo*kilo
+    giga = mega*kilo
+    tera = giga*kilo
+    peta = tera*kilo
+    exa   = peta*kilo
+    zetta = exa*kilo
+    yotta = zetta*kilo
+
+    if nextup==None:
+        nextup = 1.0
+    if thresh==None:
+        thresh = 1000
+    nextup = float(nextup)
+
+    # Yes, could be handled a bunch more more compactly (and used to be)
+
+    showdigits=0
+    if abs(amount) < nextup*kilo: # less than a kilo; omits multiplier and i
+        showval = amount
+    else:
+        for csize, mchar in ( (peta, 'P'),
+                              (tera, 'T'),
+                              (giga, 'G'),
+                              (mega, 'M'),
+                              (kilo, 'K'),
+                              #(exa,  'E'),# exa, zetta, yotta is shown as peta amounts. Too large to comprehend anyway.
+                              #(zeta, 'Z'),
+                              #(yotta,'Y'),
+           ):
+            if abs(amount) > nextup*csize:
+                showval = amount/float(csize)
+                if showval<thresh:
+                    showdigits = 1 + extradigits
+                else:
+                    showdigits = 0 + extradigits
+                append += mchar
+                if i_for_1024 and kilo==1024:
+                    append += 'i'
+                break
+
+    ret = ("%%.%df"%(showdigits))%showval
+
+    if rstrip0:
+        if '.' in ret:
+            ret=ret.rstrip('0').rstrip('.')
+
+    ret+=append
+
+    return ret
+
+
+
+if __name__ == '__main__':
+
+    p=optparse.OptionParser()
+
+    p.add_option('-s','--dbname-substring',  default=None,         action="store",  dest='substr',
+                 help='Only report databases with given substring')
+
+    #p.add_option('-a','--apparent-size',     default=False,         action="store_true",  dest='apparentsize',
+    #             help='By default we report disk use. This reports apparent size instead.')
+
+    p.add_option('-p','--precise-rowcount',  default=False,         action="store_true",  dest='precisecount',
+                 help='By default we get the row count estimate via VACUUM statistics, which can make the column sizes a little imprecise. This forces a count(*), which is slower but precise.')
+    
+    p.add_option('-c','--column-sizes',      default=False,         action="store_true",  dest='showcols',
+                 help='Estimate size use per column. NOTE: this basically reads all data, so is slow and will mess with your caches')
+    
+    options,args = p.parse_args()
+
+    
+
+    conn = psycopg2.connect('dbname=postgres user=postgres host=localhost connect_timeout=5')
+    curs = conn.cursor()
+
+    curs.execute("SELECT setting FROM pg_settings WHERE name = 'data_directory';")
+    postgresql_directory, = curs.fetchone()
+
+    curs.execute("select datname, oid from pg_database")
+    dbrows = curs.fetchall()
+    conn.close()
+
+
+    total_all = 0
+    for dbname, dboid in sorted(dbrows):       
+        if dbname in ('template0', 'template1'):
+            continue
+
+        if options.substr!=None:
+            show = False
+            for eachstr in options.substr.split():
+                if eachstr in dbname:
+                    show = True
+            if not show:
+                continue
+            
+        #print "== Database:%s (%d) =="%(dbname,dboid)
+        try:
+            conn = psycopg2.connect('dbname=%s user=postgres host=localhost connect_timeout=5'%dbname)
+            curs = conn.cursor()
+
+            # things that pg_class refers to
+            ns = {}
+            curs.execute('select oid,nspname,nspowner,nspacl from pg_namespace')
+            for oid,name,_,_ in curs:
+                ns[oid]=name
+
+            ty = {}
+            curs.execute('select oid,typname from pg_type')
+            for oid,name in curs:
+                ty[oid]=name
+
+            totalsize = 0
+            regular = 0
+            toast = 0
+            index = 0
+            pgother = 0
+
+            regulartablenames = []
+
+            curs.execute("select relname,relnamespace,relkind,reltype,relfilenode,reltoastrelid, relpages from pg_class")
+            for relname,relnamespace,relkind,reltype,relfilenode,reltoastrelid, relpages in curs:
+                if relnamespace in ns:
+                    relnamespace = ns[relnamespace]
+                if reltype in ty: # 0 for indices, which don't have a type
+                    reltype = ty[reltype]
+                #print 'name:%s  ns:%s  kind:%s   type:%s   rfn:%s  rtrid:%s'%( relname,relnamespace,relkind,reltype,relfilenode,reltoastrelid )
+                # relnamespace   name via pg_namespace.oid
+                # relkind:       r = ordinary table, i = index, S = sequence, v = view, m = materialized view, c = composite type, t = TOAST table, f = foreign table
+                # reltype        name via pg_type.oid
+                # relfilenode    filename, <postgresql_directory>/data/base/<dboid>/<relfilenode>
+                # reltoastrelid  id of TOAST table associated with this table
+
+                #fn = '%s/base/%s/%s'%(postgresql_directory, dboid, relfilenode)
+                if 1: #os.path.exists(fn):
+                    #stob = os.stat(fn)
+                    #if options.apparentsize:
+                    #    sz = stob.st_size # apparent size
+                    #else:
+                    #    sz = stob.st_blocks * 512
+                    sz = relpages*8192
+                    totalsize += sz
+                    if relkind=='r':
+                        regular += sz
+                        if relnamespace in ('public',):
+                            regulartablenames.append( relname )
+                    elif relkind=='t':
+                        toast   += sz
+                    elif relkind=='i':
+                        index   += sz
+                    elif relkind in 'Svmcf':
+                        pgother+=sz
+                    else:
+                        pass
+                        print( 'DECIDE',dbname, relname, sz, fn )
+
+            print ("%20r  total size: %5sB, of which"%(dbname, kmg(totalsize) ) +
+                  "   regulartable %5sB"%kmg(regular) +
+                  "   toast %5sB"%kmg(toast) +
+                  "   indexes %5sB"%kmg(index) +
+                  "   other %5sB"%kmg(pgother) )
+
+            total_all += totalsize
+
+
+            ##########
+            if options.showcols:
+                def colsizesums(tablename):
+                    ''' For the table name (in the selected database), returns each column's:
+                        - name
+                        - type
+                        - total size (bytes)
+                        - total size (pretty string)
+                        - average row size (bytes)
+                    '''
+                    try:
+                        tablename = re.sub('[^A-Za-z0-9_]','',tablename) # basic sanitization
+                        ret=[]
+
+
+                        if 0:
+                            curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
+                                                   pg_size_pretty(pg_table_size(%s)),
+                                                   pg_size_pretty(pg_total_relation_size(%s)),
+                                                   pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
+                            relsize, tabsize, torelsize, indices = curs.fetchone()
+
+                            print( "  size w/o TOAST, w/o indices  %s"%relsize)
+                            print( "  size  w/ TOAST, w/o indices  %s"%tabsize)
+                            print( "  size  w/ TOAST,  w/ indices  %s"%torelsize)
+                            print( "                      indices size  %s"%indices)
+                        else:
+                            curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
+                                                   pg_size_pretty(pg_table_size(%s)-pg_relation_size(%s)),
+                                                   pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
+                            basesize, toastsize, indexsize = curs.fetchone()            
+                            print( "  base table size %9s"%basesize)
+                            print( "       TOAST size %9s"%toastsize)
+                            print( "       index size %9s"%indexsize)
+
+
+                        
+                        if options.precisecount:
+                            curs.execute('select count(*) from %s'%tablename)
+                            numrows, = curs.fetchone()
+                            print( "Number of rows: %d"%numrows)
+                        else:
+                            curs.execute("SELECT reltuples FROM pg_class WHERE relname=%s", (tablename,) ) 
+                            numrows, = curs.fetchone()
+                            print( "Number of rows: %d  (estimate, also affects accuracy of below)"%numrows )
+                            
+
+                        curs.execute("""SELECT column_name,data_type FROM information_schema.columns
+                                        WHERE table_name = %s order by ordinal_position""", (tablename,))
+                        for colname,coltype in curs.fetchall():
+                            # yes, that's interpolated. Should be safe _enough_,
+                            #  assuming table and column names are not insane.
+                            curs.execute("""SELECT sum(pg_column_size(%s)),
+                                                   pg_size_pretty(sum(pg_column_size(%s))),
+                                                   avg(pg_column_size(%s))
+                                            FROM %s"""%(colname,colname,colname, tablename))
+                            sumsize, nicesum, avgsize = curs.fetchone()
+                            if sumsize==None:
+                                sumsize = -1
+                                nicesum = -1
+                                avgsize = -1
+                            else:
+                                sumsize = int(sumsize)
+                                avgsize = round(avgsize,1)
+
+                            sum_octet_size, avg_octet_size = -1, -1
+                            try:
+                                curs.execute("""SELECT pg_size_pretty(sum(octet_length(%s))), avg(octet_length(%s)) FROM %s"""%(colname,colname, tablename))
+                                sum_octet_size, avg_octet_size = curs.fetchone()
+                                avg_octet_size = round(avg_octet_size, 1)
+                            except: # will fail for unTOASTable things.Too lazy to do it properly :)
+                                #raise
+                                pass
+                            conn.rollback()
+
+                            yield colname, coltype,  sumsize, nicesum, avgsize,  sum_octet_size, avg_octet_size
+
+
+                    finally:
+                        pass
+
+
+                colsizes = "  %-15s  %35s  %13s %-10s  %11s   %11s  %12s  %6s"
+
+                for tablename in regulartablenames:
+                    print ("")
+                    print ("TABLE %r.%r"%(dbname,tablename))
+                    hdr=False
+                    for colname, coltype, total_bytes, total_str, avgrow,  sumoctet, avgoctet in colsizesums( tablename ):
+                        if not hdr:
+                            print( colsizes%('NAME','TYPE','SUM_SIZE','','AVG_SIZE',  'SUM_OCTET', 'AVG_OCTETSIZE', 'COMPR') )
+                            hdr=True
+
+                        compr=''
+                        if sumoctet==-1 or avgoctet==None:
+                            sumoctet=''
+                        else:
+                            compr = '%d%%'%( 100.*(avgrow/avgoctet) )
+                        if avgoctet==-1:
+                            avgoctet=''
+
+                        print( colsizes%(colname, coltype, total_bytes, '(%4d MB)'%( round(total_bytes/1000000) ), avgrow,  sumoctet,avgoctet, compr) )
+
+
+            conn.close() # done with connection to this particular database
+            
+        except Exception as e:
+            raise
+            pass
+            #print e
+
+
+    print( "Total size of databases: %sB"%(kmg(total_all) ) )
