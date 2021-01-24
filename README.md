@@ -49,7 +49,10 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
 
 Proof of concept version, contains various hardcoded assumptions, and assume I have misread documentation and that various sizes are inaccurate.  I need to read up.
 
-Needs access to each database, so basically just assumes we're the admin. Related to:
+Needs access to each database, so basically just assumes 
+- we connect as postgresql role postgres
+- which is trusted on localhost (so no username)
+- that's the admin that can read everything
 
 You're running someone else's code on your database.
 
