@@ -29,8 +29,6 @@
       -h, --help            show this help message and exit
       -s SUBSTR, --dbname-substring=SUBSTR
                             Only report databases with given substring
-      -a, --apparent-size   By default we report disk use. This reports apparent
-                            size instead.
       -p, --precise-rowcount
                             By default we get the row count estimate via VACUUM
                             statistics, which can make the column sizes a little
@@ -43,9 +41,11 @@
 
 # Caveats
 
-Proof of concept version, contains various hardcoded assumptions, and I may have misread documentation.  I'm sure the sizes are approximate  I need to read up.
-
-You need to be able to stat the database's actual files on filesystem. (TODO: figure out if we can do it from the database itself - see exact meaning of relpages)
+Proof of concept version, contains various hardcoded assumptions, and I may have probably misread documentation.  I'm sure the sizes are approximate.  I need to read up.
 
 You're running someone else's code on your database.
+
+# Consider
+
+Since this has code that matches filenames to relations, I could do a 'forced indices warming' or similar.
 
