@@ -81,15 +81,11 @@ def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradi
                 if i_for_1024 and kilo==1024:
                     append += 'i'
                 break
-
     ret = ("%%.%df"%(showdigits))%showval
-
     if rstrip0:
         if '.' in ret:
             ret=ret.rstrip('0').rstrip('.')
-
     ret+=append
-
     return ret
 
 
