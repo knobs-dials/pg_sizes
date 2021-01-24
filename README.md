@@ -22,8 +22,10 @@
       proposed                                     boolean           3155 (   0 MB)           1.0
     Total size of databases: 6.4MB
 
-The first comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
-The second uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.4/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
+The database summary comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
+
+The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.4/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
+
 
 # Options
     Usage: pg_sizes [options]
