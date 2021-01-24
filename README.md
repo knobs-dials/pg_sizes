@@ -22,6 +22,9 @@
       proposed                                     boolean           3155 (   0 MB)           1.0
     Total size of databases: 6.4MB
 
+The first comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
+The second uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.4/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
+
 # Options
     Usage: pg_sizes [options]
     
@@ -43,10 +46,14 @@
 
 Proof of concept version, contains various hardcoded assumptions, and assume I have misread documentation and that various sizes are inaccurate.  I need to read up.
 
+Needs access to each database; currently assumes we're the admin. Related to:
+
 You're running someone else's code on your database.
 
 
 # TODO
+
+More sanitizing, there's a little nasty code in there.
 
 Since this has code that matches filenames to relations, I could do a 'forced indices warming' or such.
 
