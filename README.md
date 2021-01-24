@@ -1,16 +1,3 @@
-# pg_sizes
-
-Summarize sizes of each database, splitting mainly into
-- regular tables
-- TOAST tables
-- indices 
-- other
-
-
-Can also reports use per column. 
-Only when you ask, because this reads most data so will likely mess with your cacheing.
-
-
 # Example
 
      # pg_sizes
