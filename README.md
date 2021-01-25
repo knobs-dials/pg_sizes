@@ -53,7 +53,7 @@ Proof of concept version, contains various hardcoded assumptions, and assume I h
 
 Needs access to each database, so basically just assumes 
 - we connect as postgresql role `postgres`
-- which is trusted on localhost (so no username)
+- which is trusted on localhost via pg_hba (so no username)
 - that's the admin that can read everything
 
 
