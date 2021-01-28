@@ -47,7 +47,7 @@
 
 The database summary comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
 
-The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.4/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
+The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.6/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
 (and some assumptions about how those relate to TOAST and indices, which is probably at least part of why they seem a little different)
 
 
