@@ -195,9 +195,9 @@ if __name__ == '__main__':
                         print( 'DECIDE',dbname, relname, sz, fn )
 
             print ("%20r  total size: %5sB, of which"%(dbname, kmg(totalsize) ) +
-                  "   regulartable %5sB"%kmg(regular) +
+                  "   table %5sB"%kmg(regular) +
                   "   toast %5sB"%kmg(toast) +
-                  "   indexes %5sB"%kmg(index) +
+                  "   index %5sB"%kmg(index) +
                   "   other %5sB"%kmg(pgother) )
 
             total_all += totalsize
@@ -300,7 +300,7 @@ if __name__ == '__main__':
                         if sumoctet==-1 or avgoctet==None:
                             sumoctet=''
                         else:
-                            compr = '%d%%'%( 100.*(avgrow/avgoctet) )
+                            compr = '%d%%'%( 100.*(float(avgrow)/float(avgoctet)) )
                         if avgoctet==-1:
                             avgoctet=''
 
