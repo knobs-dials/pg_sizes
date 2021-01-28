@@ -27,13 +27,6 @@
  - SUM_OCTET is the total uncompressed size (only applies to some types), AVG_OCTETSIZE is that divided by row count
  - COMPR is AVGSIZE/AVGOCTETSIZE
  
-
-The database summary comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
-
-The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.4/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
-(and some assumptions about how those relate to TOAST and indices, which is probably at least part of why they seem a little different)
-
-
 # Options
     Usage: pg_sizes [options]
     
@@ -49,6 +42,13 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
       -c, --column-sizes    Estimate size use per column. NOTE: this basically
                             reads all data, so is slow and will mess with your
                             caches
+
+# Notes
+
+The database summary comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
+
+The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.4/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
+(and some assumptions about how those relate to TOAST and indices, which is probably at least part of why they seem a little different)
 
 
 # Caveats
