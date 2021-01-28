@@ -1,10 +1,10 @@
 # Example
 
      # pg_sizes
-          'dataplot'  total size:   16MB, of which    regulartable 12.7MB    toast  459KB    indexes  2.5MB    other  8.2KB
-             'music'  total size:  5.1GB, of which    regulartable  3.1GB    toast  1.1GB    indexes    1GB    other   33KB
-            'quotes'  total size:  6.4MB, of which    regulartable  2.8MB    toast  492KB    indexes  3.1MB    other     0B
-             'solar'  total size:  537MB, of which    regulartable  348MB    toast  459KB    indexes  189MB    other     0B
+          'dataplot'  total size:   16MB, of which    table 12.7MB    toast  459KB    indexes  2.5MB    other  8.2KB
+             'music'  total size:  5.1GB, of which    table  3.1GB    toast  1.1GB    indexes    1GB    other   33KB
+            'quotes'  total size:  6.4MB, of which    table  2.8MB    toast  492KB    indexes  3.1MB    other     0B
+             'solar'  total size:  537MB, of which    table  348MB    toast  459KB    indexes  189MB    other     0B
      Total size of databases: 5.7GB
 
 
@@ -47,14 +47,14 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
 
 # Caveats
 
+You're running someone else's code on your database.
+
 Proof of concept version, contains various hardcoded assumptions, and assume I have misread documentation and that various sizes are inaccurate.  I need to read up.
 
 Needs access to each database, so basically just assumes 
 - we connect as postgresql role `postgres`
-- which is trusted on localhost (so no username)
+- which is trusted on localhost via pg_hba (so no username)
 - that's the admin that can read everything
-
-You're running someone else's code on your database.
 
 
 # TODO / CONSIDER
