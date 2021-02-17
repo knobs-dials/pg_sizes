@@ -55,7 +55,9 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
 
 You're running someone else's code on your database.
 
-Proof of concept version, contains various hardcoded assumptions, and assume I have misread documentation and that various sizes are inaccurate.  I need to read up.
+The column stuff reads a lot of your data. Which is slowish, and for databases larger than RAM is going to shred your nicely warmed caches for a bit.
+
+Proof of concept version, contains various hardcoded assumptions. Assume things may be inaccurate because I have misunderstood some documentation.
 
 Needs access to each database, so basically just assumes 
 - we connect as postgresql role `postgres`
@@ -67,7 +69,7 @@ Needs access to each database, so basically just assumes
 
 More sanitizing, there's a little nasty code in there.
 
-Since this has code that matches filenames to relations, I could do a 'forced indices warming' or such.
+Since this has code that matches filenames to relations, it wouldn't be a stretch to have a 'forced index warming' mode or such.
 
 It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it assumes you have filesystem permissions, which is a point of failure you don't have using pg_class.
 
