@@ -73,3 +73,4 @@ Since this has code that matches filenames to relations, it wouldn't be a stretc
 
 It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it assumes you have filesystem permissions, which is a point of failure you don't have using pg_class.
 
+Output as JSON or something else parsable
