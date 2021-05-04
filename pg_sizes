@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-
 import glob
 import sys
 import os
@@ -8,7 +7,6 @@ import re
 import optparse
 
 import psycopg2
-
 
 def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradigits=0, i_for_1024=True):
     """ For more easily skimmable sizes
