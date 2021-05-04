@@ -12,7 +12,6 @@ import psycopg2
 
 def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradigits=0, i_for_1024=True):
     """ For more easily skimmable sizes
-
         e.g.
              kmg(3429873278462) == '3.4T'
              kmg(342987327)     == '343M'
@@ -41,7 +40,6 @@ def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradi
         append      is mostly meant for optional space between number and unit.
     """
     ret = None
-
     mega = kilo*kilo
     giga = mega*kilo
     tera = giga*kilo
@@ -57,7 +55,6 @@ def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradi
     nextup = float(nextup)
 
     # Yes, could be handled a bunch more more compactly (and used to be)
-
     showdigits=0
     if abs(amount) < nextup*kilo: # less than a kilo; omits multiplier and i
         showval = amount
@@ -89,9 +86,7 @@ def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradi
     return ret
 
 
-
 if __name__ == '__main__':
-
     p=optparse.OptionParser()
 
     p.add_option('-s','--dbname-substring',  default=None,         action="store",  dest='substr',
@@ -108,8 +103,6 @@ if __name__ == '__main__':
     
     options,args = p.parse_args()
 
-    
-
     conn = psycopg2.connect('dbname=postgres user=postgres host=localhost connect_timeout=5')
     curs = conn.cursor()
 
@@ -119,7 +112,6 @@ if __name__ == '__main__':
     curs.execute("select datname, oid from pg_database")
     dbrows = curs.fetchall()
     conn.close()
-
 
     total_all = 0
     for dbname, dboid in sorted(dbrows):       
@@ -202,7 +194,6 @@ if __name__ == '__main__':
 
             total_all += totalsize
 
-
             ##########
             if options.showcols:
                 def colsizesums(tablename):
@@ -216,29 +207,13 @@ if __name__ == '__main__':
                     try:
                         tablename = re.sub('[^A-Za-z0-9_]','',tablename) # basic sanitization
                         ret=[]
-
-
-                        if 0:
-                            curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
-                                                   pg_size_pretty(pg_table_size(%s)),
-                                                   pg_size_pretty(pg_total_relation_size(%s)),
-                                                   pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
-                            relsize, tabsize, torelsize, indices = curs.fetchone()
-
-                            print( "  size w/o TOAST, w/o indices  %s"%relsize)
-                            print( "  size  w/ TOAST, w/o indices  %s"%tabsize)
-                            print( "  size  w/ TOAST,  w/ indices  %s"%torelsize)
-                            print( "                      indices size  %s"%indices)
-                        else:
-                            curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
-                                                   pg_size_pretty(pg_table_size(%s)-pg_relation_size(%s)),
-                                                   pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
-                            basesize, toastsize, indexsize = curs.fetchone()            
-                            print( "  base table size %9s"%basesize)
-                            print( "       TOAST size %9s"%toastsize)
-                            print( "       index size %9s"%indexsize)
-
-
+                        curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
+                                               pg_size_pretty(pg_table_size(%s)-pg_relation_size(%s)),
+                                               pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
+                        basesize, toastsize, indexsize = curs.fetchone()            
+                        print( "  base table size %9s"%basesize)
+                        print( "       TOAST size %9s"%toastsize)
+                        print( "       index size %9s"%indexsize)
                         
                         if options.precisecount:
                             curs.execute('select count(*) from %s'%tablename)
@@ -248,7 +223,6 @@ if __name__ == '__main__':
                             curs.execute("SELECT reltuples FROM pg_class WHERE relname=%s", (tablename,) ) 
                             numrows, = curs.fetchone()
                             print( "Number of rows: %d  (estimate, also affects accuracy of below)"%numrows )
-                            
 
                         curs.execute("""SELECT column_name,data_type FROM information_schema.columns
                                         WHERE table_name = %s order by ordinal_position""", (tablename,))
@@ -279,11 +253,8 @@ if __name__ == '__main__':
                             conn.rollback()
 
                             yield colname, coltype,  sumsize, nicesum, avgsize,  sum_octet_size, avg_octet_size
-
-
                     finally:
                         pass
-
 
                 colsizes = "  %-15s  %35s  %13s %-10s  %11s   %11s  %12s  %6s"
 
@@ -306,13 +277,11 @@ if __name__ == '__main__':
 
                         print( colsizes%(colname, coltype, total_bytes, '(%4d MB)'%( round(total_bytes/1000000) ), avgrow,  sumoctet,avgoctet, compr) )
 
-
             conn.close() # done with connection to this particular database
             
         except Exception as e:
             raise
             pass
             #print e
-
 
     print( "Total size of databases: %sB"%(kmg(total_all) ) )
