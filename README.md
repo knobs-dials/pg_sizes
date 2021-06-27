@@ -59,7 +59,7 @@ The column stuff reads a lot of your data. Which is slowish, and for databases l
 
 Proof of concept version, contains various hardcoded assumptions. Assume things may be inaccurate because I have misunderstood some documentation.
 
-Needs access to each database, so basically just assumes 
+Needs access to each database, so basically just assumes:
 - we connect as postgresql role `postgres`
 - which is trusted on localhost via pg_hba (so no username)
 - that's the admin that can read everything
