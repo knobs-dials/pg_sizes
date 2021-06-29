@@ -23,9 +23,9 @@
     Total size of databases: 6.4MB
 
  Where the last few columns are there to point out something like disk use versus apparent size - which is different mainly due to overheads and TOAST compression
- - SUM_SIZE is size on disk, AVG_SIZE is that divided by row count
- - SUM_OCTET is the total uncompressed size (only applies to some types), AVG_OCTETSIZE is that divided by row count
- - COMPR is AVGSIZE/AVGOCTETSIZE
+ - DISK_SIZE is space taken on disk (via pg_column_size), DISK_AVG is that divided by row count
+ - DATA_SIZE is the total uncompressed size (via octet_length, only applies to some types), DATA_AVG is that divided by row count
+ - COMPR is DISK_SIZE / DATA_SIZE
  
 # Options
     Usage: pg_sizes [options]
@@ -55,9 +55,10 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
 
 You're running someone else's code on your database.
 
-The column stuff reads a lot of your data. Which is slowish, and for databases larger than RAM is going to shred your nicely warmed caches for a bit.
+Proof of concept version, contains various hardcoded assumptions.
+I still need to reread the docs on the various size functions to make sure I didn't misunderstand it. Assume I might be, and the sizes might be inaccurate.
 
-Proof of concept version, contains various hardcoded assumptions. Assume things may be inaccurate because I have misunderstood some documentation.
+The column summaries need to read a lot of table data. Which is slowish, and for databases larger than RAM will probably shred your nicely warmed caches.
 
 Needs access to each database, so basically just assumes:
 - we connect as postgresql role `postgres`
