@@ -23,8 +23,10 @@
     Total size of databases: 6.4MB
 
  Where the last few columns are there to point out something like disk use versus apparent size - which is different mainly due to overheads and TOAST compression
- - DISK_SIZE is space taken on disk (via pg_column_size), DISK_AVG is that divided by row count
- - DATA_SIZE is the total uncompressed size (via octet_length, only applies to some types), DATA_AVG is that divided by row count
+ - DISK_SIZE is space taken on disk (via pg_column_size)
+ - DISK_AVG is that divided by row count
+ - DATA_SIZE is the total uncompressed size (via octet_length, only applies to some types)
+ - DATA_AVG is that divided by row count
  - COMPR is DISK_SIZE / DATA_SIZE
  
 # Options
