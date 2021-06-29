@@ -23,7 +23,7 @@
     Total size of databases: 6.4MB
 
  Where the last few columns are there to point out something like disk use versus apparent size - which is different mainly due to overheads and TOAST compression
- - SUM_SIZE is total disk use, AVG_SIZE is that divided by row count
+ - SUM_SIZE is size on disk, AVG_SIZE is that divided by row count
  - SUM_OCTET is the total uncompressed size (only applies to some types), AVG_OCTETSIZE is that divided by row count
  - COMPR is AVGSIZE/AVGOCTETSIZE
  
