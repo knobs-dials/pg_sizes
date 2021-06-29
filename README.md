@@ -27,7 +27,7 @@
  - DISK_AVG is that divided by row count
  - DATA_SIZE is the total uncompressed size (via octet_length, only applies to some types)
  - DATA_AVG is that divided by row count
- - COMPR is DISK_SIZE / DATA_SIZE
+ - COMPR is DISK_SIZE / DATA_SIZE (indicates overheads, and possible TOAST compression)
  
 # Options
     Usage: pg_sizes [options]
