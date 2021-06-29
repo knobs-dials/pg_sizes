@@ -55,25 +55,25 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
 
 # Caveats
 
-You're running someone else's code on your database.
-
 Proof of concept version, contains various hardcoded assumptions.
-I still need to reread the docs on the various size functions to make sure I didn't misunderstand it. Assume I might be, and the sizes might be inaccurate.
+I still need to reread the docs on the various size functions to ensure it means what I think it means.
 
 The column summaries need to read a lot of table data. Which is slowish, and for databases larger than RAM will probably shred your nicely warmed caches.
 
-Needs access to each database, so basically just assumes:
-- we connect as postgresql role `postgres`
-- which is trusted on localhost via pg_hba (so no username)
-- that's the admin that can read everything
+Needs access to each database, so:
+- assumes we connect as postgresql role `postgres`
+- assumes that's trusted on localhost via pg_hba (so no username)
+- assumes that's the admin and can read everything
+
+You're running someone else's code on your database.
 
 
 # TODO / CONSIDER
 
-More sanitizing, there's a little nasty code in there.
-
-Since this has code that matches filenames to relations, it wouldn't be a stretch to have a 'forced index warming' mode or such.
-
-It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it assumes you have filesystem permissions, which is a point of failure you don't have using pg_class.
-
 Output as JSON or something else parsable
+
+A 'forced index warming' mode or such, because we have code that matches filenames to relations, it wouldn't be a stretch to have 
+
+It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it has to assume you have filesystem permissions, which is a point of failure you don't have using pg_class.
+
+Clean up code, do some things more properly.
