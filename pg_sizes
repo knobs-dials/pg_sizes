@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 import glob
 import sys
 import os
@@ -8,8 +9,10 @@ import optparse
 
 import psycopg2
 
+
 def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradigits=0, i_for_1024=True):
     """ For more easily skimmable sizes
+
         e.g.
              kmg(3429873278462) == '3.4T'
              kmg(342987327)     == '343M'
@@ -38,6 +41,7 @@ def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradi
         append      is mostly meant for optional space between number and unit.
     """
     ret = None
+
     mega = kilo*kilo
     giga = mega*kilo
     tera = giga*kilo
@@ -53,6 +57,7 @@ def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradi
     nextup = float(nextup)
 
     # Yes, could be handled a bunch more more compactly (and used to be)
+
     showdigits=0
     if abs(amount) < nextup*kilo: # less than a kilo; omits multiplier and i
         showval = amount
@@ -84,12 +89,14 @@ def kmg(amount,kilo=1000, append='',thresh=15, nextup=0.9, rstrip0=True, extradi
     return ret
 
 
+
 if __name__ == '__main__':
+
     p=optparse.OptionParser()
 
-    p.add_option('-s','--dbname-substring',  default=None,         action="store",  dest='substr',
-                 help='Only report databases with given substring')
-
+    p.add_option('-d','--dbname-substring',  default=None,         action="store",  dest='dbsubstr',
+                 help='Only report databases containing given substring. Can supply multiple with commas.')
+    
     #p.add_option('-a','--apparent-size',     default=False,         action="store_true",  dest='apparentsize',
     #             help='By default we report disk use. This reports apparent size instead.')
 
@@ -98,8 +105,13 @@ if __name__ == '__main__':
     
     p.add_option('-c','--column-sizes',      default=False,         action="store_true",  dest='showcols',
                  help='Estimate size use per column. NOTE: this basically reads all data, so is slow and will mess with your caches')
+
+    p.add_option('-t','--table-substring',  default=None,         action="store",  dest='tabsubstr',
+                 help='Only show column sizes for tables containing given substring. Can supply multiple with commas.')
     
     options,args = p.parse_args()
+
+    
 
     conn = psycopg2.connect('dbname=postgres user=postgres host=localhost connect_timeout=5')
     curs = conn.cursor()
@@ -111,14 +123,15 @@ if __name__ == '__main__':
     dbrows = curs.fetchall()
     conn.close()
 
+
     total_all = 0
     for dbname, dboid in sorted(dbrows):       
-        if dbname in ('template0', 'template1'):
+        if dbname in ('template0', 'template1'):  # not interesting, and we can't access one of them
             continue
 
-        if options.substr!=None:
+        if options.dbsubstr!=None:
             show = False
-            for eachstr in options.substr.split():
+            for eachstr in options.dbsubstr.split(','):
                 if eachstr in dbname:
                     show = True
             if not show:
@@ -149,7 +162,7 @@ if __name__ == '__main__':
             regulartablenames = []
 
             curs.execute("select relname,relnamespace,relkind,reltype,relfilenode,reltoastrelid, relpages from pg_class")
-            for relname,relnamespace,relkind,reltype,relfilenode,reltoastrelid, relpages in curs:
+            for relname,relnamespace,relkind,reltype,relfilenode,reltoastrelid, relpages in curs:                            
                 if relnamespace in ns:
                     relnamespace = ns[relnamespace]
                 if reltype in ty: # 0 for indices, which don't have a type
@@ -192,6 +205,7 @@ if __name__ == '__main__':
 
             total_all += totalsize
 
+
             ##########
             if options.showcols:
                 def colsizesums(tablename):
@@ -205,13 +219,29 @@ if __name__ == '__main__':
                     try:
                         tablename = re.sub('[^A-Za-z0-9_]','',tablename) # basic sanitization
                         ret=[]
-                        curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
-                                               pg_size_pretty(pg_table_size(%s)-pg_relation_size(%s)),
-                                               pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
-                        basesize, toastsize, indexsize = curs.fetchone()            
-                        print( "  base table size %9s"%basesize)
-                        print( "       TOAST size %9s"%toastsize)
-                        print( "       index size %9s"%indexsize)
+
+
+                        if 0:
+                            curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
+                                                   pg_size_pretty(pg_table_size(%s)),
+                                                   pg_size_pretty(pg_total_relation_size(%s)),
+                                                   pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
+                            relsize, tabsize, torelsize, indices = curs.fetchone()
+
+                            print( "  size w/o TOAST, w/o indices  %s"%relsize)
+                            print( "  size  w/ TOAST, w/o indices  %s"%tabsize)
+                            print( "  size  w/ TOAST,  w/ indices  %s"%torelsize)
+                            print( "                      indices size  %s"%indices)
+                        else:
+                            curs.execute('''select pg_size_pretty(pg_relation_size(%s)),
+                                                   pg_size_pretty(pg_table_size(%s)-pg_relation_size(%s)),
+                                                   pg_size_pretty(pg_indexes_size(%s))''', (tablename,tablename,tablename, tablename))
+                            basesize, toastsize, indexsize = curs.fetchone()            
+                            print( "  base table size %9s"%basesize)
+                            print( "       TOAST size %9s"%toastsize)
+                            print( "       index size %9s"%indexsize)
+
+
                         
                         if options.precisecount:
                             curs.execute('select count(*) from %s'%tablename)
@@ -222,58 +252,89 @@ if __name__ == '__main__':
                             numrows, = curs.fetchone()
                             print( "Number of rows: %d  (estimate, also affects accuracy of below)"%numrows )
 
+                        if numrows==0:
+                            # CONSIDER: not reporting table with zero rows.
+                            print( '   (no row data to report)' )
+                            return
+                            
+
                         curs.execute("""SELECT column_name,data_type FROM information_schema.columns
                                         WHERE table_name = %s order by ordinal_position""", (tablename,))
                         for colname,coltype in curs.fetchall():
-                            # yes, that's interpolated. Should be safe _enough_,
-                            #  assuming table and column names are not insane.
-                            curs.execute("""SELECT sum(pg_column_size(%s)),
-                                                   pg_size_pretty(sum(pg_column_size(%s))),
-                                                   avg(pg_column_size(%s))
-                                            FROM %s"""%(colname,colname,colname, tablename))
-                            sumsize, nicesum, avgsize = curs.fetchone()
-                            if sumsize==None:
-                                sumsize = -1
-                                nicesum = -1
-                                avgsize = -1
+                            if coltype in ('boolean',): # things we know won't really have byte sizes 
+                                yield colname, coltype,  '', '', '',  '', ''
+
                             else:
-                                sumsize = int(sumsize)
-                                avgsize = round(avgsize,1)
+                                # yes, that puts the names straight in there.
+                                #   it should be safe _enough_, assuming table and column names are not insane, but TODO: see if this can be made safer
+                                curs.execute("""SELECT sum(pg_column_size(%s)),
+                                                       pg_size_pretty(sum(pg_column_size(%s))),
+                                                       avg(pg_column_size(%s))
+                                                FROM %s"""%(colname,colname,colname, tablename))
+                                sumsize, nicesum, avgsize = curs.fetchone()
+                                if sumsize == None:
+                                    sumsize = ''
+                                    nicesum = ''
+                                    avgsize = ''
+                                else:
+                                    sumsize = int(sumsize)
+                                    avgsize = round(avgsize,1)
 
-                            sum_octet_size, avg_octet_size = -1, -1
-                            try:
-                                curs.execute("""SELECT pg_size_pretty(sum(octet_length(%s))), avg(octet_length(%s)) FROM %s"""%(colname,colname, tablename))
-                                sum_octet_size, avg_octet_size = curs.fetchone()
-                                avg_octet_size = round(avg_octet_size, 1)
-                            except: # will fail for unTOASTable things.Too lazy to do it properly :)
-                                #raise
-                                pass
-                            conn.rollback()
+                                sum_octet_size, avg_octet_size = '', ''
+                                try:
+                                    curs.execute("""SELECT pg_size_pretty(sum(octet_length(%s))), avg(octet_length(%s)) FROM %s"""%(colname,colname, tablename))
+                                    sum_octet_size, avg_octet_size = curs.fetchone()
+                                    avg_octet_size = round(avg_octet_size, 1)
+                                except Exception as e:
+                                    # a bunch of things have a column_size but not an octet_length
+                                    #roughly speaking, unTOASTable things, and some others (boolean columns).  Too lazy to do it properly :
+                                    pass
+                                    #print( e )
+                                    #raise
+                                conn.rollback()                                
+                                yield colname, coltype,  sumsize, nicesum, avgsize,  sum_octet_size, avg_octet_size
 
-                            yield colname, coltype,  sumsize, nicesum, avgsize,  sum_octet_size, avg_octet_size
                     finally:
                         pass
+
 
                 colsizes = "  %-15s  %35s  %13s %-10s  %11s   %11s  %12s  %6s"
 
                 for tablename in regulartablenames:
+                    if options.tabsubstr!=None:
+                        show = False
+                        for eachstr in options.tabsubstr.split(','):
+                            if eachstr in tablename:
+                                show = True
+                        if not show:
+                            continue
+                    
+                    print ("")
                     print ("")
                     print ("TABLE %r.%r"%(dbname,tablename))
                     hdr=False
                     for colname, coltype, total_bytes, total_str, avgrow,  sumoctet, avgoctet in colsizesums( tablename ):
+                        # TODO: deal with columns without values
+                        
                         if not hdr:
                             print( colsizes%('NAME','TYPE','DISK_SIZE','','DISK_AVG',  'DATA_SIZE', 'DATA_AVG', 'COMPR') )
                             hdr=True
 
                         compr=''
-                        if sumoctet==-1 or avgoctet==None:
+                        if sumoctet=='' or avgoctet=='':
                             sumoctet=''
-                        else:
+                        elif avgrow!='':
                             compr = '%d%%'%( 100.*(float(avgrow)/float(avgoctet)) )
                         if avgoctet==-1:
                             avgoctet=''
 
-                        print( colsizes%(colname, coltype, total_bytes, '(%4d MB)'%( round(total_bytes/1000000) ), avgrow,  sumoctet,avgoctet, compr) )
+                        if total_bytes == '':
+                            mb = ''
+                        else:
+                            mb = '(%4d MB)'%( round(total_bytes/1000000) )
+                            
+                        print( colsizes%(colname, coltype, total_bytes, mb, avgrow,  sumoctet,avgoctet, compr) )
+
 
             conn.close() # done with connection to this particular database
             
@@ -281,5 +342,6 @@ if __name__ == '__main__':
             raise
             pass
             #print e
+
 
     print( "Total size of databases: %sB"%(kmg(total_all) ) )

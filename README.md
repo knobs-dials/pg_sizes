@@ -30,20 +30,28 @@
  - COMPR is DISK_SIZE / DATA_SIZE (indicates overheads, and possible TOAST compression)
  
 # Options
-    Usage: pg_sizes [options]
-    
-    Options:
-      -h, --help            show this help message and exit
-      -s SUBSTR, --dbname-substring=SUBSTR
-                            Only report databases with given substring
-      -p, --precise-rowcount
-                            By default we get the row count estimate via VACUUM
-                            statistics, which can make the column sizes a little
-                            imprecise. This forces a count(*), which is slower but
-                            precise.
-      -c, --column-sizes    Estimate size use per column. NOTE: this basically
-                            reads all data, so is slow and will mess with your
-                            caches
+
+```
+Usage: pg_sizes [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -d DBSUBSTR, --dbname-substring=DBSUBSTR
+                        Only report databases containing given substring. Can
+                        supply multiple with commas.
+  -p, --precise-rowcount
+                        By default we get the row count estimate via VACUUM
+                        statistics, which can make the column sizes a little
+                        imprecise. This forces a count(*), which is slower but
+                        precise.
+  -c, --column-sizes    Estimate size use per column. NOTE: this basically
+                        reads all data, so is slow and will mess with your
+                        caches
+  -t TABSUBSTR, --table-substring=TABSUBSTR
+                        Only show column sizes for tables containing given
+                        substring. Can supply multiple with commas.
+```
+
 
 # Notes
 
