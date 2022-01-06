@@ -60,14 +60,13 @@ Options:
 
 The database summary comes entirely from data in [pg_class](https://www.postgresql.org/docs/9.6/catalog-pg-class.html) for each database. 
 
-The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.6/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT)
-(and some assumptions about how those relate to TOAST and indices, which is probably at least part of why they seem a little different)
+The column stuff uses [pg_column_size and octet_length](https://www.postgresql.org/docs/9.6/functions-admin.html#FUNCTIONS-ADMIN-DBOBJECT), and some assumptions about how those relate to TOAST and indices, which is probably at least part of why they seem a little different.
 
 
 # Caveats
 
 Proof of concept version, contains various hardcoded assumptions.
-I still need to reread the docs on the various size functions to ensure it means what I think it means.
+I still need to reread the docs on the various size functions to ensure it means precisely what I think it means.
 
 The column summaries need to read a lot of table data. Which is slowish, and for databases larger than RAM will probably shred your nicely warmed caches.
 
@@ -76,14 +75,14 @@ Needs access to each database, so:
 - assumes that's trusted on localhost via pg_hba (so no username)
 - assumes that's the admin and can read everything
 
-You're running someone else's code on your database.
+Also, you're running someone else's code on your database.
 
 
 # TODO / CONSIDER
 
-Output as JSON or something else parsable
+Output as JSON, or something else parsable
 
-A 'forced index warming' mode or such, because we have code that matches filenames to relations, it wouldn't be a stretch to have 
+A 'forced index warming' mode or such, because we have code that matches filenames to relations so it wouldn't be a stretch to have 
 
 It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it has to assume you have filesystem permissions, which is a point of failure you don't have using pg_class.
 
