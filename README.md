@@ -21,7 +21,7 @@
       viewed                         integer           6240 (   0 MB)           4.0
       proposed                       boolean
     Total size of databases: 8.7MB
-```
+
 
  Where the last few columns are there to point out something like disk use versus apparent size - which is different mainly due to overheads and TOAST compression
  - DISK_SIZE is space taken on disk (via pg_column_size)
