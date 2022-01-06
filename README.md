@@ -8,26 +8,27 @@
      Total size of databases: 5.7GB
 
 
-    # pg_sizes -s quotes -c -p
+    # pg_sizes -d quotes -c -p
     TABLE 'quotes'.'quotes'
-      base table size    616 kB
-           TOAST size     40 kB
-           index size    712 kB
-    Number of rows: 3155
-      NAME                                            TYPE       SUM_SIZE                AVG_SIZE     SUM_OCTET  AVG_OCTETSIZE   COMPR
-      quote                                           text         432090 (   0 MB)         137.0        417 kB         135.3    101%
-      quoter                                          text          32371 (   0 MB)          10.3         29 kB           9.3    110%
-      source                                          text          16779 (   0 MB)           5.3         13 kB           4.3    123%
-      viewed                                       integer           6252 (   0 MB)           4.0
-      proposed                                     boolean           3155 (   0 MB)           1.0
-    Total size of databases: 6.4MB
+      base table size      631K
+           TOAST size       41K
+           index size      737K
+    Number of rows: 3156
+      NAME                              TYPE      DISK_SIZE                DISK_AVG     DATA_SIZE      DATA_AVG   COMPR
+      quote                             text         432179 (   0 MB)         136.9        426875         135.3    101%
+      quoter                            text          31937 (   0 MB)          10.1         28781           9.1    110%
+      source                            text          16492 (   0 MB)           5.2         13324           4.2    123%
+      viewed                         integer           6240 (   0 MB)           4.0
+      proposed                       boolean
+    Total size of databases: 8.7MB
+```
 
  Where the last few columns are there to point out something like disk use versus apparent size - which is different mainly due to overheads and TOAST compression
  - DISK_SIZE is space taken on disk (via pg_column_size)
  - DISK_AVG is that divided by row count
  - DATA_SIZE is the total uncompressed size (via octet_length, only applies to some types)
  - DATA_AVG is that divided by row count
- - COMPR is DISK_SIZE / DATA_SIZE (indicates overheads, and possible TOAST compression)
+ - COMPR is DISK_SIZE / DATA_SIZE to show  overheads, and possible TOAST compression
  
 # Options
 
