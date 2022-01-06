@@ -23,7 +23,9 @@
     Total size of databases: 8.7MB
 
 
- Where the last few columns are there to point out something like disk use versus apparent size - which is different mainly due to overheads and TOAST compression
+ Where the last few columns are there to point out something similar to 
+ [disk use versus apparent size](https://duckduckgo.com/?q=disk+use+versus+apparent+size).
+ - which is different mainly due to overheads and TOAST compression
  - DISK_SIZE is space taken on disk (via pg_column_size)
  - DISK_AVG is that divided by row count
  - DATA_SIZE is the total uncompressed size (via octet_length, only applies to some types)
