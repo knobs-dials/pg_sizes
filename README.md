@@ -65,6 +65,8 @@ The column stuff uses [pg_column_size and octet_length](https://www.postgresql.o
 
 # Caveats
 
+It looks like pg_class isn't always updated on vacuums, so this may be significantly off (after bulk inserts?).
+
 Proof of concept version, contains various hardcoded assumptions.
 I still need to reread the docs on the various size functions to ensure it means precisely what I think it means.
 
