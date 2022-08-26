@@ -84,7 +84,7 @@ Also, you're running someone else's code on your database.
 
 - Make the distinction of disk use versus data size in more places
 
-- don't count on pg_class being correct - it can be off by a ''lot'' until the next vacuum
+- maybe don't count on pg_class (used only for the overview) being correct - it can be off by a ''lot'' until the next vacuum
 
 - Output as JSON, or something else parsable
 
