@@ -82,10 +82,14 @@ Also, you're running someone else's code on your database.
 
 # TODO / CONSIDER
 
-Output as JSON, or something else parsable
+- Make the distinction of disk use versus data size in more places
 
-A 'forced index warming' mode or such, because we have code that matches filenames to relations so it wouldn't be a stretch to have 
+- don't count on pg_class being correct - it can be off by a ''lot'' until the next vacuum
 
-It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it has to assume you have filesystem permissions, which is a point of failure you don't have using pg_class.
+- Output as JSON, or something else parsable
 
-Clean up code, do some things more properly.
+- A 'forced index warming' mode or such, because we have code that matches filenames to relations so it wouldn't be a stretch to have 
+
+- It may be useful to show disk use rather than apparent size, by stat()s to the filesystem. The code for it is commented out because it has to assume you have filesystem permissions, which is a point of failure you don't have using pg_class.
+
+- Clean up code, do some things more properly.
