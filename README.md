@@ -1,3 +1,12 @@
+# Intro
+
+Report the size of each database, and how much is in regular tables, TOAST, and indices.
+
+Report storage size per column as well (without the regular/TOAST split).
+
+WARNING: so, I misunderstood what each function does exactly. Update pending
+
+
 # Example
 
      # pg_sizes
